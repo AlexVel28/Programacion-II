@@ -1,0 +1,57 @@
+import java.util.Scanner;
+
+public class RegistroNotas{
+
+    public static double promedio(double n1, double n2, double n3) {
+        return (n1 + n2 + n3) / 3;
+    }
+
+    public static boolean aprueba(double prom) {
+        if (prom >= 61) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static void mostrar(String[] nombres, double[] promedios, String[] estados) {
+        System.out.println("Resumen de estudiantes:");
+        System.out.println("------------------------");
+        for (int i = 0; i < nombres.length; i++) {
+            System.out.println("Nombre: " + nombres[i] + "     Promedio: " + promedios[i] + "     Estado: " + estados[i]);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        String[] nombres = new String[5];
+        double[] promedios = new double[5];
+        String[] estados = new String[5];
+
+        for (int i = 0; i < 5; i++) {
+            System.out.println("Estudiante " + (i + 1));
+            System.out.print("Nombre: ");
+            nombres[i] = sc.nextLine();
+
+            System.out.print("Nota 1: ");
+            double n1 = sc.nextDouble();
+            System.out.print("Nota 2: ");
+            double n2 = sc.nextDouble();
+            System.out.print("Nota 3: ");
+            double n3 = sc.nextDouble();
+            sc.nextLine(); 
+
+            double prom = promedio(n1, n2, n3);
+            promedios[i] = prom;
+
+            if (aprueba(prom)) {
+                estados[i] = "Aprobado";
+            } else {
+                estados[i] = "Reprobado";
+            }
+        }
+
+        mostrar(nombres, promedios, estados);
+    }
+}

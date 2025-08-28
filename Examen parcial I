@@ -1,0 +1,41 @@
+import java.util.*;
+
+public class Problema1 {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        double[] h = new double[7];
+
+        for (int i = 0; i < 7; i++) {
+            do {
+                System.out.print("Humedad día " + (i+1) + ": ");
+                h[i] = sc.nextDouble();
+            } while (h[i] < 0 || h[i] > 100);
+        }
+
+        System.out.print("Ingrese umbral U: ");
+        double U = sc.nextDouble();
+
+        double max = h[0], min = h[0], suma = 0;
+        int diaMax = 1, diaMin = 1, sobreU = 0;
+        boolean crec = true, decr = true;
+
+        for (int i = 0; i < 7; i++) {
+            if (h[i] > max) { max = h[i]; diaMax = i+1; }
+            if (h[i] < min) { min = h[i]; diaMin = i+1; }
+            if (h[i] > U) sobreU++;
+            suma += h[i];
+            if (i > 0) {
+                if (h[i] < h[i-1]) crec = false;
+                if (h[i] > h[i-1]) decr = false;
+            }
+        }
+
+        String tendencia = crec ? "creciente" : (decr ? "decreciente" : "mixta");
+        double prom = suma / 7;
+        double[] copia = Arrays.copyOf(h, 7);
+        Arrays.sort(copia);
+
+        System.out.printf("Máx humedad al día, Mín humedad día,  Promedio humedad, ", max, diaMax, min, diaMin, prom);
+        System.out.printf("Días, Tendencia, Ordenado", U, sobreU, tendencia, Arrays.toString(copia));
+    }
+}

@@ -1,0 +1,173 @@
+import java.time.LocalDateTime;
+
+enum EstadoCita {
+    PROGRAMADA,
+    REAGENDADA,
+    CANCELADA,
+    ATENDIDA
+}
+
+class Dueno {
+    private long id;
+    private String nombreCompleto;
+    private String telefono;
+    private String email;
+    private String direccion;
+
+    public Dueno(long id, String nombreCompleto, String telefono, String email, String direccion) {
+        this.id = id;
+        this.nombreCompleto = (nombreCompleto != null) ? nombreCompleto : "Sin nombre";
+        this.telefono = (telefono != null) ? telefono : "502-00000000";
+        this.email = email;
+        this.direccion = (direccion != null) ? direccion : "sin dirección";
+    }
+
+    public Dueno(long id, String nombreCompleto, String telefono) {
+        this(id, nombreCompleto, telefono, null, "sin dirección");
+    }
+
+    public String resumen() {
+        return "Dueño #" + id + " - " + nombreCompleto + " (" + telefono + ")";
+    }
+}
+
+class Paciente {
+    private long id;
+    private String nombre;
+    private String especie;
+    private String raza;
+    private int edadMeses;
+    private double pesoKg;
+
+    public Paciente(long id, String nombre, String especie, String raza, int edadMeses, double pesoKg) {
+        this.id = id;
+        this.nombre = (nombre != null) ? nombre : "Sin nombre";
+        this.especie = (especie != null) ? especie : "desconocida";
+        this.raza = (raza != null) ? raza : "mestizo";
+        this.edadMeses = (edadMeses > 0) ? edadMeses : 1;
+        this.pesoKg = (pesoKg > 0) ? pesoKg : 1.0;
+    }
+
+    public Paciente(long id, String nombre, String especie) {
+        this(id, nombre, especie, "mestizo", 1, 1.0);
+    }
+
+    public boolean esCachorro() {
+        return edadMeses <= 12;
+    }
+
+    public String resumen() {
+        return "Paciente #" + id + " - " + nombre + " (" + especie + ", " + raza + ", " 
+                + edadMeses + " meses, " + pesoKg + "kg)";
+    }
+}
+
+class Cita {
+    private long id;
+    private Dueno dueno;
+    private Paciente paciente;
+    private LocalDateTime fechaHora;
+    private EstadoCita estado;
+    private String motivoCancelacion;
+
+    public Cita(long id, Dueno dueno, Paciente paciente, LocalDateTime fechaHora) {
+        this.id = id;
+        this.dueno = dueno;
+        this.paciente = paciente;
+        this.fechaHora = fechaHora;
+        this.estado = EstadoCita.PROGRAMADA;
+    }
+
+    public void reagendar(LocalDateTime nuevaFecha) {
+        if (estado == EstadoCita.PROGRAMADA) {
+            this.fechaHora = nuevaFecha;
+            this.estado = EstadoCita.REAGENDADA;
+        }
+    }
+
+    public void cancelar(String motivo) {
+        if (estado != EstadoCita.ATENDIDA) {
+            this.estado = EstadoCita.CANCELADA;
+            this.motivoCancelacion = motivo;
+        }
+    }
+
+    public void marcarAtendida() {
+        if (estado == EstadoCita.PROGRAMADA || estado == EstadoCita.REAGENDADA) {
+            this.estado = EstadoCita.ATENDIDA;
+        }
+    }
+
+    public String resumen() {
+        return "Cita #" + id + " - Dueño: " + dueno.resumen() + 
+               " - Mascota: " + paciente.resumen() + 
+               " - Fecha: " + fechaHora + 
+               " - Estado: " + estado + 
+               ((motivoCancelacion != null) ? " (" + motivoCancelacion + ")" : "");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Dueno[] duenos = new Dueno[500];
+        Paciente[] pacientes = new Paciente[1000];
+
+        for (int i = 0; i < duenos.length; i++) {
+            duenos[i] = new Dueno(
+                    i + 1,
+                    "Dueño" + (i + 1),
+                    "502-" + String.format("%08d", (int)(Math.random() * 100000000))
+            );
+
+            pacientes[i * 2] = new Paciente(
+                    i * 2 + 1, "Mascota" + (i * 2 + 1),
+                    (i % 2 == 0) ? "perro" : "gato",
+                    "mestizo",
+                    (i % 120) + 1,
+                    1.0 + (i % 30)
+            );
+
+            pacientes[i * 2 + 1] = new Paciente(
+                    i * 2 + 2, "Mascota" + (i * 2 + 2),
+                    (i % 2 == 0) ? "perro" : "gato",
+                    "mestizo",
+                    ((i + 1) % 120) + 1,
+                    1.0 + ((i + 1) % 30)
+            );
+        }
+
+        System.out.println("\n--- Primeros 3 dueños ---");
+        for (int i = 0; i < 3; i++) System.out.println(duenos[i].resumen());
+
+        System.out.println("\n--- Primeras 6 mascotas ---");
+        for (int i = 0; i < 6; i++) System.out.println(pacientes[i].resumen());
+
+        int cachorros = 0, perros = 0, gatos = 0;
+
+        for (Paciente p : pacientes) {
+            if (p.esCachorro()) cachorros++;
+            if (p != null) {
+                if (p.resumen().contains("perro")) {
+                    perros++;
+                } else if (p.resumen().contains("gato")) {
+                    gatos++;
+                }
+            }
+        }
+
+        System.out.println("\nCachorros: " + cachorros);
+        System.out.println("Perros: " + perros + ", Gatos: " + gatos);
+
+        Cita[] citas = new Cita[40];
+        for (int i = 0; i < 40; i++) {
+            citas[i] = new Cita(i + 1, duenos[i / 2], pacientes[i],
+                    LocalDateTime.now().plusDays(1).withHour(10 + (i % 2)).withMinute(0));
+            if ((i + 1) % 2 == 0) citas[i].reagendar(LocalDateTime.now().plusDays(2).withHour(10));
+            else if ((i + 1) % 3 == 0) citas[i].cancelar("No puede asistir");
+            else citas[i].marcarAtendida();
+        }
+
+        System.out.println("\n--- Resumen de citas ---");
+        for (Cita c : citas) System.out.println(c.resumen());
+    }
+}

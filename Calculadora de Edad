@@ -1,0 +1,22 @@
+import java.util.Scanner;
+
+public class CalculadoraEdad {
+
+    public static void main(String[] args) {
+        Scanner entrada = new Scanner(System.in);
+
+        System.out.print("Ingrese su nombre: ");
+        String nombre = entrada.nextLine();
+
+        System.out.print("Ingrese su año de nacimiento: ");
+        int anioNacimiento = entrada.nextInt();
+
+        int anioActual = 2025;
+
+        int edad = anioActual - anioNacimiento;
+
+        System.out.println("Hola " + nombre + ", tu edad aproximada es: " + edad + " años.");
+
+        entrada.close();
+    }
+}

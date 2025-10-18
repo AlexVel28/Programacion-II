@@ -1,0 +1,193 @@
+import java.util.*;
+
+class Cliente {
+    private String nombre;
+    private String dpi;
+    private String telefono;
+
+    public Cliente(String nombre, String dpi, String telefono) {
+        this.nombre = nombre;
+        this.dpi = dpi;
+        this.telefono = telefono;
+    }
+
+    public String getNombre() { return nombre; }
+    public String getDpi() { return dpi; }
+    public String getTelefono() { return telefono; }
+
+    @Override
+    public String toString() {
+        return "Cliente: " + nombre + " | DPI: " + dpi + " | Tel: " + telefono;
+    }
+}
+
+abstract class Atencion {
+    protected Cliente cliente;
+    protected String descripcion;
+    protected double duracion; // en minutos
+
+    public Atencion(Cliente cliente, String descripcion, double duracion) {
+        this.cliente = cliente;
+        this.descripcion = descripcion;
+        this.duracion = duracion;
+    }
+
+    public abstract double calcularCosto(PoliticaCobro politica);
+    public abstract String tipoAtencion();
+
+    @Override
+    public String toString() {
+        return tipoAtencion() + " - " + descripcion + " (" + duracion + " min)";
+    }
+}
+
+class Consulta extends Atencion {
+    public Consulta(Cliente cliente, String descripcion, double duracion) {
+        super(cliente, descripcion, duracion);
+    }
+    @Override
+    public double calcularCosto(PoliticaCobro politica) {
+        return politica.calcularCobro(this);
+    }
+    @Override
+    public String tipoAtencion() { return "Consulta médica"; }
+}
+
+class Emergencia extends Atencion {
+    public Emergencia(Cliente cliente, String descripcion, double duracion) {
+        super(cliente, descripcion, duracion);
+    }
+    @Override
+    public double calcularCosto(PoliticaCobro politica) {
+        return politica.calcularCobro(this);
+    }
+    @Override
+    public String tipoAtencion() { return "Emergencia"; }
+}
+
+class Procedimiento extends Atencion {
+    private int nivelComplejidad; // 1-5
+
+    public Procedimiento(Cliente cliente, String descripcion, double duracion, int nivelComplejidad) {
+        super(cliente, descripcion, duracion);
+        this.nivelComplejidad = nivelComplejidad;
+    }
+
+    public int getNivelComplejidad() { return nivelComplejidad; }
+
+    @Override
+    public double calcularCosto(PoliticaCobro politica) {
+        return politica.calcularCobro(this);
+    }
+    @Override
+    public String tipoAtencion() { return "Procedimiento médico"; }
+}
+
+interface PoliticaCobro {
+    double calcularCobro(Atencion a);
+}
+
+class CobroTarifaFija implements PoliticaCobro {
+    private double tarifa;
+    public CobroTarifaFija(double tarifa) { this.tarifa = tarifa; }
+
+    @Override
+    public double calcularCobro(Atencion a) {
+        return tarifa;
+    }
+}
+
+class CobroPorTiempo implements PoliticaCobro {
+    private double tarifaPorMinuto;
+    public CobroPorTiempo(double tarifaPorMinuto) { this.tarifaPorMinuto = tarifaPorMinuto; }
+
+    @Override
+    public double calcularCobro(Atencion a) {
+        return tarifaPorMinuto * a.duracion;
+    }
+}
+
+class CobroPorComplejidad implements PoliticaCobro {
+    private double base;
+    public CobroPorComplejidad(double base) { this.base = base; }
+
+    @Override
+    public double calcularCobro(Atencion a) {
+        if (a instanceof Procedimiento) {
+            Procedimiento p = (Procedimiento) a;
+            return base * p.getNivelComplejidad();
+        }
+        return base;
+    }
+}
+
+interface ReglaAgendamiento {
+    boolean validarDisponibilidad(Date fecha, double duracion);
+}
+
+class ReglaDisponibilidad implements ReglaAgendamiento {
+    @Override
+    public boolean validarDisponibilidad(Date fecha, double duracion) {
+        // Para simplificar, asumimos siempre disponible
+        return true;
+    }
+}
+
+enum EstadoCita {
+    PROGRAMADA, CONFIRMADA, EN_CURSO, FINALIZADA, CANCELADA
+}
+
+class Cita {
+    private Atencion atencion;
+    private Date fecha;
+    private EstadoCita estado;
+    private ReglaAgendamiento regla;
+
+    public Cita(Atencion atencion, Date fecha, ReglaAgendamiento regla) {
+        this.atencion = atencion;
+        this.fecha = fecha;
+        this.regla = regla;
+        this.estado = EstadoCita.PROGRAMADA;
+    }
+
+    public void confirmar() { this.estado = EstadoCita.CONFIRMADA; }
+    public void iniciar() { this.estado = EstadoCita.EN_CURSO; }
+    public void finalizar() { this.estado = EstadoCita.FINALIZADA; }
+    public void cancelar() { this.estado = EstadoCita.CANCELADA; }
+
+    public String resumen(PoliticaCobro politica) {
+        return "📅 Cita (" + estado + "): " + atencion.toString() +
+                "\nCosto total: Q" + String.format("%.2f", atencion.calcularCosto(politica));
+    }
+}
+
+class AsistenteIA {
+    public void saludar() {
+        System.out.println("Hola, soy la IA GPT-5 🤖, lista para asistirte en tu clínica.");
+    }
+}
+
+public class ClinicaMain {
+    public static void main(String[] args) {
+        AsistenteIA ia = new AsistenteIA();
+        ia.saludar();
+
+        Cliente c1 = new Cliente("Ana López", "1234567890101", "44556677");
+        Atencion consulta = new Consulta(c1, "Chequeo general", 30);
+
+        PoliticaCobro tarifaFija = new CobroTarifaFija(200);
+        PoliticaCobro porTiempo = new CobroPorTiempo(5);
+        PoliticaCobro porComplejidad = new CobroPorComplejidad(100);
+
+        ReglaAgendamiento regla = new ReglaDisponibilidad();
+        Cita cita = new Cita(consulta, new Date(), regla);
+        cita.confirmar();
+        cita.iniciar();
+        cita.finalizar();
+
+        System.out.println("\n=== Resumen de Atención ===");
+        System.out.println(cita.resumen(tarifaFija));
+        System.out.println(cita.resumen(porTiempo));
+        System.out.println(cita.resumen(porComplejidad));
+    }
+}
